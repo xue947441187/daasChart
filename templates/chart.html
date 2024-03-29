@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with GPT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .chat-container {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .user-message {
+            margin-bottom: 10px;
+            text-align: right;
+        }
+
+        .bot-message {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 80px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Chat with GPT</h1>
+    <div class="chat-container" id="chat-container"></div>
+    <div>
+        <input type="text" id="user-input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div>
+        <input type="file" id="file-input" accept=".csv" multiple>
+        <label for="file-input" class="upload-btn">Upload CSV</label>
+        <div id="uploading-indicator" class="uploading" style="display: none;">Uploading...</div>
+        <div id="progress" class="progress" style="display: none;"></div>
+    </div>
+
+</div>
+
+<script>
+    function sendMessage() {
+        var userMessage = document.getElementById("user-input").value;
+        if (userMessage.trim() === "") return;
+
+        displayMessage(userMessage, "user");
+
+        fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({message: userMessage})
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image) {
+                    // 如果返回的是图片数据，则在聊天容器中显示图片
+                    displayImage(data.image);
+                } else {
+                    // 如果返回的是文本数据，则在聊天容器中显示文本
+                    displayMessage(data.message, "bot");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+
+        document.getElementById("user-input").value = "";
+    }
+
+    function displayImage(imageData) {
+        // 创建一个<img>元素，设置src为Base64编码的图片数据
+        var imgElement = document.createElement("img");
+        imgElement.src = "data:image/png;base64," + imageData; // 这里假设图片格式为PNG
+        imgElement.className = "bot-image"; // 可以添加样式进行调整
+        var chatContainer = document.getElementById("chat-container");
+        chatContainer.appendChild(imgElement);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+
+    function displayMessage(message, sender) {
+        var chatContainer = document.getElementById("chat-container");
+        var messageDiv = document.createElement("div");
+        messageDiv.textContent = message;
+        if (sender === "user") {
+            messageDiv.className = "user-message";
+        } else {
+            messageDiv.className = "bot-message";
+        }
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    document.getElementById("file-input").addEventListener("change", function () {
+        var files = this.files;
+        if (files.length > 0) {
+            var formData = new FormData();
+            for (var i = 0; i < files.length; i++) {
+                formData.append("files", files[i]); // 修改这里的键名为 "file"
+            }
+
+            document.getElementById("uploading-indicator").style.display = "block";
+            var progressDiv = document.getElementById("progress");
+            progressDiv.innerHTML = '';
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/upload', true);
+
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    var percentComplete = (e.loaded / e.total) * 100;
+                    progressDiv.innerHTML = 'Uploading: ' + percentComplete.toFixed(2) + '%';
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    console.log(xhr.responseText);
+                    document.getElementById("uploading-indicator").style.display = "none";
+                    var responseData = JSON.parse(xhr.responseText);
+                    if (responseData && responseData.success) {
+                                    for (var i = 0; i < responseData.filename.length; i++) {
+                                    displayMessage("File uploaded successfully: " + responseData.filename[i], "bot");
+                                }
+
+                    } else if (responseData && responseData.error) {
+                        displayMessage("Error: " + responseData.error, "bot");
+                    }
+                }
+            };
+
+            xhr.send(formData);
+        }
+    });
+
+
+</script>
+</body>
+</html>
