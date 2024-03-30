@@ -10,9 +10,11 @@ from db_utils import read_csv_and_write_to_database, employee_engine, customer_f
 
 app = Flask(__name__)
 
-
 @app.route('/')
 def index():
+    return render_template('index.html')
+@app.route('/chart')
+def chart():
     return render_template('chart.html')
 
 @app.route('/api/chat', methods=['POST'])
