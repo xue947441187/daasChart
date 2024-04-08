@@ -210,10 +210,10 @@ def modify_query_with_year_and_month_range(input_text):
         start_year = f'20{start_year}'  # 两位数年份转换成四位数形式
     if len(end_year) == 2:
         end_year = f'20{end_year}'  # 两位数年份转换成四位数形式
-
-    # 构建查询语句
-    # modified_query = f"SELECT * FROM FinancialInformation WHERE (YEAR(Date) = {start_year} AND MONTH(Date) >= {start_month}) AND (YEAR(Date) = {end_year} AND MONTH(Date) <= {end_month});"
-    modified_query = f"SELECT * FROM FinancialInformation WHERE (YEAR(Date) = {start_year} AND MONTH(Date) >= {start_month}) OR (YEAR(Date) = {end_year} AND MONTH(Date) <= {end_month});"
+    if start_year == end_year:
+        modified_query = f"SELECT * FROM FinancialInformation WHERE (YEAR(Date) = {start_year} AND MONTH(Date) >= {start_month}) AND (YEAR(Date) = {end_year} AND MONTH(Date) <= {end_month});"
+    else:
+        modified_query = f"SELECT * FROM FinancialInformation WHERE (YEAR(Date) = {start_year} AND MONTH(Date) >= {start_month}) OR (YEAR(Date) = {end_year} AND MONTH(Date) <= {end_month});"
 
     return modified_query
 
