@@ -8,7 +8,7 @@ from db_utils import read_csv_and_write_to_database, employee_engine, customer_f
     encode_image, plot_chart_from_db, get_chart_type, modify_query_with_year, parse_user_message, \
     execute_query_to_get_result, update_phone_number_in_database, parse_modify_phone_message
 
-app = Flask(__name__)
+app = Flask(__name__,static_folder='static')
 
 @app.route('/')
 def index():
