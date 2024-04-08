@@ -9,6 +9,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-image:url("{{ url_for('static', filename='images/Frame 48095885.png') }}")
         }
         .container {
             max-width: 800px;
@@ -20,14 +21,12 @@
             justify-content: center;
             margin-top: 20px;
         }
-        .link-box {
-            width: 200px;
-            height: 200px;
-            margin: 0 10px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            display: inline-block;
-        }
+          .column {
+        width: 45%; /* 设置列的宽度 */
+        float: left; /* 使用浮动将列放置在一行上 */
+        margin-right: 20%; /* 增加右侧间距 */
+              margin-left: 20%;
+    }
         .link-box a {
             display: block;
             width: 100%;
@@ -40,28 +39,39 @@
         .link-box2{
             margin-top:50px
         }
+        .title_css{
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>创新技术展示中心</h1>
+        <h1 class="title_css">创新技术展示中心</h1>
         <div class="link-container">
+            <div class="column">
             <span>
             <div class="link-box">
-                <a href="/chart">Database As A Service</a>
+                <a href="/chart"><img src="{{ url_for('static', filename='images/Database As A Service.png') }}" alt="Database As A Service"> </a>
+{#                <a href="/chart">Database As A Service</a>#}
             </div>
             <div class="link-box link-box2">
-                <a href="#">AI As A Service</a>
+                <a href="#"><img src="{{ url_for('static', filename='images/AI As A Service.png') }}" alt="AI As A Service"> </a>
             </div>
             </span>
-            <span>
+            </div>
+            <div class="column">
+                            <span>
             <div class="link-box">
-                <a href="#">Security As A Service</a>
+                <a href="#"><img src="{{ url_for('static', filename='images/Security As A Service.png') }}" alt="Security As A Service"> </a>
+{#                <a href="#">Security As A Service</a>#}
             </div>
             <div class="link-box link-box2">
-                <a href="#">Cloud As A Service</a>
+                <a href="#"><img src="{{ url_for('static', filename='images/Cloud As A Service.png') }}" alt="Cloud As A Service"> </a>
+{#                <a href="#">Cloud As A Service</a>#}
             </div>
             </span>
+            </div>
+
         </div>
     </div>
 </body>
