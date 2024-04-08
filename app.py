@@ -6,13 +6,15 @@ from sqlalchemy import text
 
 from db_utils import read_csv_and_write_to_database, employee_engine, customer_financial_engine, generate_image, \
     encode_image, plot_chart_from_db, get_chart_type, modify_query_with_year, parse_user_message, \
-    execute_query_to_get_result, update_phone_number_in_database, parse_modify_phone_message
+    execute_query_to_get_result, update_phone_number_in_database, parse_modify_phone_message, parse_time_range, \
+    modify_query_with_year_and_month_range
 
 app = Flask(__name__,static_folder='static')
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
 @app.route('/chart')
 def chart():
     return render_template('chart.html')
@@ -24,7 +26,7 @@ def chat():
 
     # 假设这里是您的对话逻辑，生成了文本回复和图片回复
     bot_text_response = "GPT：" + user_message  # 示例文本回复
-    has_year, has_bar_chart_keyword, has_avg_age_query, has_name = parse_user_message(user_message)
+    has_year, has_month, has_time_range, has_bar_chart_keyword, has_avg_age_query, has_name, has_special_offer = parse_user_message(user_message)
 
     if has_name:
         # 如果消息中包含姓名，进行数据库查询
@@ -55,6 +57,27 @@ def chat():
             # 如果查询结果为空，提示用户未找到相关信息
             return jsonify({'message': '未找到相关信息'})
 
+
+
+    elif has_time_range:
+
+        # 如果消息中包含指定时间范围...
+
+        start_year, start_month, end_year, end_month = parse_time_range(user_message)
+
+        if start_year is not None:  # 如果开始年份不为空，说明成功解析了时间范围
+            # 执行相应的操作，比如生成报告或查询数据
+            query = modify_query_with_year_and_month_range(user_message)
+            image_response = plot_chart_from_db(customer_financial_engine, query,
+                                                chart_type=get_chart_type(user_message))
+        else:
+            # 如果开始年份为空，则无法理解用户输入，返回相应提示
+            return jsonify({'message': '抱歉，我无法理解您的输入，请重新输入。'})
+        # 返回图片数据
+        if image_response is not None:
+            return jsonify({'image': image_response})
+        # 执行相应的操作，比如生成报告或查询数据
+
     elif has_year and has_bar_chart_keyword:
         # 如果消息中包含年份和柱状图关键词，返回图片
         query = modify_query_with_year(user_message)
@@ -79,6 +102,7 @@ def chat():
 
     # 如果未返回图片、文本或处理姓名，暂时不处理其他情况
     return jsonify({'message': bot_text_response})
+
 
 
 # 上传文件的视图函数
@@ -111,10 +135,6 @@ def upload_files():
             read_csv_and_write_to_database(file_path, customer_financial_engine,"FinancialInformation")
 
     return jsonify({'success': 'Write to database successful',"filename":file_paths})
-
-
-
-
 
 
 if __name__ == '__main__':

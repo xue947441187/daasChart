@@ -186,24 +186,81 @@ def modify_query_with_year(input_text):
         return "SELECT * FROM FinancialInformation WHERE YEAR(Date) = 2023;"
 
 
+def modify_query_with_year_and_month_range(input_text):
+    # 定义正则表达式模式，用于匹配年份和月份信息
+    year_pattern = r'(\d{2,4})年?'
+    month_pattern = r'(\d{1,2})月'
+
+    # 查找匹配的年份和月份信息
+    year_matches = re.findall(year_pattern, input_text)
+    month_matches = re.findall(month_pattern, input_text)
+
+    # 如果匹配到的年份和月份信息不够或不符合要求，则直接返回原始查询语句
+    if len(year_matches) < 2 or len(month_matches) < 2:
+        return "SELECT * FROM FinancialInformation WHERE YEAR(Date) = 2023;"
+
+    # 提取开始年份、开始月份、结束年份和结束月份
+    start_year = year_matches[0]
+    start_month = month_matches[0]
+    end_year = year_matches[1]
+    end_month = month_matches[1]
+
+    # 根据年份的长度调整格式
+    if len(start_year) == 2:
+        start_year = f'20{start_year}'  # 两位数年份转换成四位数形式
+    if len(end_year) == 2:
+        end_year = f'20{end_year}'  # 两位数年份转换成四位数形式
+
+    # 构建查询语句
+    # modified_query = f"SELECT * FROM FinancialInformation WHERE (YEAR(Date) = {start_year} AND MONTH(Date) >= {start_month}) AND (YEAR(Date) = {end_year} AND MONTH(Date) <= {end_month});"
+    modified_query = f"SELECT * FROM FinancialInformation WHERE (YEAR(Date) = {start_year} AND MONTH(Date) >= {start_month}) OR (YEAR(Date) = {end_year} AND MONTH(Date) <= {end_month});"
+
+    return modified_query
+
+
 def parse_user_message(user_message):
     import re
 
-    # 定义正则表达式模式，用于匹配年份信息、柱状图关键词和姓名
+    # 定义正则表达式模式，用于匹配年份信息、柱状图关键词、姓名、指定时间范围和特惠关键词
     year_pattern = r'(\d{2,4})年?'
-    # bar_chart_keywords = r'(柱状图|bar)'
-    name_pattern = r'(?:帮我查询一下)?([^\s,]+)的信息'
+    month_pattern = r'(\d{1,2})月'
+    time_range_pattern = fr'{year_pattern}(?:年)(?:\s*{month_pattern})?(?:\s*-\s*{year_pattern}(?:年)(?:\s*{month_pattern})?)?'
     chart_keywords = r'(柱状图|bar|折线图|line|散点图|scatter|饼图|pie)'
     avg_age_pattern = r'(?:帮我查询一下)?员工的平均年龄'
+    name_pattern = r'(?:帮我查询一下)?([^\s,]+)的信息'
+    special_offer_pattern = r'特惠'
 
-    # 查找匹配的年份信息、柱状图关键词、姓名和年龄信息
+    # 查找匹配的年份信息、柱状图关键词、姓名、员工平均年龄、特惠关键词和指定时间范围
     has_year = re.search(year_pattern, user_message) is not None
+    has_month = re.search(month_pattern, user_message) is not None
+    has_time_range = re.search(time_range_pattern, user_message) is not None
     has_bar_chart_keyword = re.search(chart_keywords, user_message, re.IGNORECASE) is not None
     has_avg_age_query = re.search(avg_age_pattern, user_message) is not None
+    has_special_offer = re.search(special_offer_pattern, user_message) is not None
     match = re.search(name_pattern, user_message)
     name = match.group(1) if match else None
 
-    return has_year, has_bar_chart_keyword, has_avg_age_query, name
+    return has_year, has_month, has_time_range, has_bar_chart_keyword, has_avg_age_query, name, has_special_offer
+
+def parse_time_range(user_message):
+    import re
+
+    year_pattern = r'(\d{2,4})年?'
+    month_pattern = r'(\d{1,2})月'
+
+    # 匹配时间范围的正则表达式模式
+    time_range_pattern = fr'{year_pattern}(?:年)(?:\s*{month_pattern})?(?:\s*-\s*{year_pattern}(?:年)(?:\s*{month_pattern})?)?'
+
+    # 查找匹配的时间范围
+    match = re.search(time_range_pattern, user_message)
+    if match:
+        start_year = int(match.group(1))
+        start_month = int(match.group(2)) if match.group(2) else 1
+        end_year = int(match.group(3)) if match.group(3) else start_year
+        end_month = int(match.group(4)) if match.group(4) else 12
+        return start_year, start_month, end_year, end_month
+    else:
+        return None, None, None, None
 
 
 
