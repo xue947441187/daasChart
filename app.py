@@ -24,9 +24,8 @@ def chat():
 
     # 假设这里是您的对话逻辑，生成了文本回复和图片回复
     bot_text_response = "GPT：" + user_message  # 示例文本回复
+    has_year, has_bar_chart_keyword, has_avg_age_query, has_name = parse_user_message(user_message)
 
-    # 根据用户消息内容进行多重判断
-    has_year, has_bar_chart_keyword, has_name = parse_user_message(user_message)
     if has_name:
         # 如果消息中包含姓名，进行数据库查询
         query = text(f"""SELECT id, "name", age, height, weight, department, phone
@@ -36,12 +35,26 @@ def chat():
         if not result.empty:
             # 如果查询结果不为空，展示结果给用户
             row = result.iloc[0]
-            row_str = "\n".join([f"{key +':':<10}{value}\n" for key, value in row.items()])
+            row_str = "\n".join([f"{key + ':':<10}{value}\n" for key, value in row.items()])
 
             return jsonify({'message': row_str})
         else:
             # 如果查询结果为空，提示用户未找到相关信息
             return jsonify({'message': '未找到相关信息'})
+
+    elif has_avg_age_query:
+        # 如果消息中包含查询员工平均年龄的要求，执行相应的操作
+        query = text("""SELECT AVG(age) AS average_age FROM public."EmployeeInformation";""")
+        result = execute_query_to_get_result(query)
+
+        if not result.empty:
+            # 如果查询结果不为空，获取平均年龄并返回给用户
+            average_age = result.iloc[0]['average_age']
+            return jsonify({'message': f'员工的平均年龄为：{average_age}'})
+        else:
+            # 如果查询结果为空，提示用户未找到相关信息
+            return jsonify({'message': '未找到相关信息'})
+
     elif has_year and has_bar_chart_keyword:
         # 如果消息中包含年份和柱状图关键词，返回图片
         query = modify_query_with_year(user_message)
@@ -50,6 +63,7 @@ def chat():
         # 返回图片数据
         if image_response is not None:
             return jsonify({'image': image_response})
+
     elif '修改' in user_message and '手机号' in user_message:
         # 如果用户要修改手机号
         name, new_phone = parse_modify_phone_message(user_message)

@@ -187,19 +187,23 @@ def modify_query_with_year(input_text):
 
 
 def parse_user_message(user_message):
+    import re
+
     # 定义正则表达式模式，用于匹配年份信息、柱状图关键词和姓名
     year_pattern = r'(\d{2,4})年?'
     # bar_chart_keywords = r'(柱状图|bar)'
     name_pattern = r'(?:帮我查询一下)?([^\s,]+)的信息'
     chart_keywords = r'(柱状图|bar|折线图|line|散点图|scatter|饼图|pie)'
+    avg_age_pattern = r'(?:帮我查询一下)?员工的平均年龄'
 
-    # 查找匹配的年份信息、柱状图关键词和姓名
+    # 查找匹配的年份信息、柱状图关键词、姓名和年龄信息
     has_year = re.search(year_pattern, user_message) is not None
     has_bar_chart_keyword = re.search(chart_keywords, user_message, re.IGNORECASE) is not None
+    has_avg_age_query = re.search(avg_age_pattern, user_message) is not None
     match = re.search(name_pattern, user_message)
     name = match.group(1) if match else None
 
-    return has_year, has_bar_chart_keyword, name
+    return has_year, has_bar_chart_keyword, has_avg_age_query, name
 
 
 
