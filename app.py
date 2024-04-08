@@ -59,7 +59,7 @@ def chat():
 
 
 
-    elif has_time_range:
+    elif has_time_range and has_month:
 
         # 如果消息中包含指定时间范围...
 
